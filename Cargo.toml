@@ -1,0 +1,45 @@
+[package]
+name = "gexport"
+version = "0.1.0"
+edition = "2021"
+authors = ["Sebastian YEPES F <syepes@gmail.com>"]
+keywords = ["grafana", "export", "dashboards", "datasource"]
+license = "Apache-2.0"
+description = "Grafana Dashboard Exporter"
+homepage = "https://github.com/syepes/gexport"
+repository = "https://github.com/syepes/gexport.git"
+exclude = ["*"]
+include = ["README.md", "CHANGELOG.md", "src/**/*.rs", "benches/**/*.rs", "tests/**/*.rs", "cfg/*", "Cargo.toml", "rustfmt.toml", "clippy.toml"]
+readme = "README.md"
+publish = true
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4.*"
+env_logger = "0.9.*"
+chrono = "0.4.*"
+reqwest = { version = "0.11.*", features = ["blocking","json", "cookies", "multipart"] }
+serde = { version = "1.0.*", features = ["derive"] }
+serde_json = { version = "1.0.*", features = ["raw_value"] }
+anyhow = "1.0.*"
+clap-v3 = { git = "https://github.com/poma/clap/", default-features = false, features = ["std", "cargo"] }
+
+[dev-dependencies]
+clippy = { version = "*" }
+
+[profile.dev]
+debug = 0
+split-debuginfo = "unpacked"
+
+[profile.test]
+debug = 0
+split-debuginfo = "unpacked"
+
+[profile.release]
+panic = 'abort'
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1

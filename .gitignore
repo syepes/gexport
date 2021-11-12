@@ -1,0 +1,12 @@
+.idea
+*.iml
+.vscode
+*.swp
+*~
+**/.DS_Store
+*.local
+*.local.*
+**/*.rs.bk
+target/
+temp/
+export/
