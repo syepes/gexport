@@ -1,4 +1,7 @@
 build:
+	@cargo build --release
+
+build-dev:
 	@cargo build
 
 clean:

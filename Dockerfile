@@ -26,5 +26,4 @@ ENV RUST_BACKTRACE=full
 COPY --from=builder /app/target/release/gexport gexport
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && update-ca-certificates
 
-EXPOSE 8080
 ENTRYPOINT ["/app/gexport"]

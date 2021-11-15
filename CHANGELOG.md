@@ -6,6 +6,9 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 
 ## [Unreleased]
 
+## 0.1.1 - 2021-11-15
+
+- Better error handling
 
 ## 0.1.0 - 2021-11-13
 
