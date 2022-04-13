@@ -1,6 +1,6 @@
 [package]
 name = "gexport"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Sebastian YEPES F <syepes@gmail.com>"]
 keywords = ["grafana", "export", "dashboards", "datasource"]
@@ -9,7 +9,17 @@ description = "Grafana Dashboard Exporter"
 homepage = "https://github.com/syepes/gexport"
 repository = "https://github.com/syepes/gexport.git"
 exclude = ["*"]
-include = ["README.md", "CHANGELOG.md", "src/**/*.rs", "benches/**/*.rs", "tests/**/*.rs", "cfg/*", "Cargo.toml", "rustfmt.toml", "clippy.toml"]
+include = [
+  "README.md",
+  "CHANGELOG.md",
+  "src/**/*.rs",
+  "benches/**/*.rs",
+  "tests/**/*.rs",
+  "cfg/*",
+  "Cargo.toml",
+  "rustfmt.toml",
+  "clippy.toml",
+]
 readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,11 +27,16 @@ readme = "README.md"
 log = "0.4.*"
 env_logger = "0.9.*"
 chrono = "0.4.*"
-reqwest = { version = "0.11.*", features = ["blocking","json"] }
+reqwest = { version = "0.11.*", features = ["blocking", "json"] }
 serde = { version = "1.0.*", features = ["derive"] }
 serde_json = { version = "1.0.*", features = ["raw_value"] }
 anyhow = "1.0.*"
-clap-v3 = { git = "https://github.com/poma/clap/", default-features = false, features = ["std", "cargo"] }
+clap = { version = "3.0.*", default-features = false, features = [
+  "std",
+  "color",
+  "cargo",
+  "env",
+] }
 
 [dev-dependencies]
 clippy = { version = "*" }

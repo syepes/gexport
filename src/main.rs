@@ -5,18 +5,18 @@ use std::io::Write;
 extern crate log;
 extern crate env_logger;
 
-extern crate clap_v3;
-use clap_v3::{App, Arg};
+extern crate clap;
+use clap::{App, Arg};
 
 fn main() -> Result<(), anyhow::Error> {
   let app = App::new("").version(env!("CARGO_PKG_VERSION"))
                         .author(env!("CARGO_PKG_AUTHORS"))
                         .about(env!("CARGO_PKG_DESCRIPTION"))
-                        .arg(Arg::with_name("host").short('h').long("host").env("HOST").required(true).help("http://host:port"))
-                        .arg(Arg::with_name("auth_usr").short('u').long("auth_usr").env("AUTH_USR").required(true))
-                        .arg(Arg::with_name("auth_pwd").short('p').long("auth_pwd").env("AUTH_PWD").requires("auth_usr").required(true))
-                        .arg(Arg::with_name("export_path").short('e').long("export_path").env("EXPORT_PATH").required(false).default_value("export").help("Export path"))
-                        .arg(Arg::with_name("v").short('v').multiple(true).takes_value(false).required(false).help("Log verbosity (-v, -vv, -vvv...)"))
+                        .arg(Arg::new("host").short('h').long("host").env("HOST").required(true).help("http://host:port"))
+                        .arg(Arg::new("auth_usr").short('u').long("auth_usr").env("AUTH_USR").required(true))
+                        .arg(Arg::new("auth_pwd").short('p').long("auth_pwd").env("AUTH_PWD").requires("auth_usr").required(true))
+                        .arg(Arg::new("export_path").short('e').long("export_path").env("EXPORT_PATH").required(false).default_value("export").help("Export path"))
+                        .arg(Arg::new("v").short('v').multiple_values(true).takes_value(false).required(false).help("Log verbosity (-v, -vv, -vvv...)"))
                         .get_matches();
 
   match app.occurrences_of("v") {
