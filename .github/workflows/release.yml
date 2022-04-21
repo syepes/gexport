@@ -166,7 +166,7 @@ jobs:
             fi
             pkgname=$PROJECT_NAME-$TAG-$platform
             mkdir tmp/$pkgname
-            cp -rp README.md LICENSE.md cfg tmp/$pkgname
+            cp -rp README.md LICENSE.md tmp/$pkgname
             mv bins-$platform/$BIN_NAME$exe tmp/$pkgname
             chmod +x tmp/$pkgname/$BIN_NAME$exe
 
