@@ -104,8 +104,8 @@ impl<'a> ClientInfo<'a> {
                 Ok(Value::Object(m)) => m.get("message").map(|m| m.to_string().replace('"', "")).unwrap_or_else(|| "unknown".to_string()),
                 _ => "unknown".to_string(),
               };
-              error!("Unknown request error: {}", msg);
-              Err(anyhow!("Unknown request error: {}", msg))
+              error!("Unknown request error: {} / org_id: {}", msg, id);
+              Err(anyhow!("Unknown request error: {} / org_id: {}", msg, id))
             },
           }
         },

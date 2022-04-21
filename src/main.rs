@@ -12,11 +12,11 @@ fn main() -> Result<(), anyhow::Error> {
   let app = App::new("").version(env!("CARGO_PKG_VERSION"))
                         .author(env!("CARGO_PKG_AUTHORS"))
                         .about(env!("CARGO_PKG_DESCRIPTION"))
-                        .arg(Arg::new("host").short('h').long("host").env("HOST").required(true).help("http://host:port"))
-                        .arg(Arg::new("auth_usr").short('u').long("auth_usr").env("AUTH_USR").required(true))
-                        .arg(Arg::new("auth_pwd").short('p').long("auth_pwd").env("AUTH_PWD").requires("auth_usr").required(true))
-                        .arg(Arg::new("export_path").short('e').long("export_path").env("EXPORT_PATH").required(false).default_value("export").help("Export path"))
-                        .arg(Arg::new("v").short('v').multiple_values(true).takes_value(false).required(false).help("Log verbosity (-v, -vv, -vvv...)"))
+                        .arg(Arg::new("host").short('h').long("host").env("HOST").required(true).takes_value(true).help("http://host:port"))
+                        .arg(Arg::new("auth_usr").short('u').long("auth_usr").env("AUTH_USR").required(true).takes_value(true))
+                        .arg(Arg::new("auth_pwd").short('p').long("auth_pwd").env("AUTH_PWD").requires("auth_usr").required(true).takes_value(true))
+                        .arg(Arg::new("export_path").short('e').long("export_path").env("EXPORT_PATH").required(false).takes_value(true).default_value("export").help("Export path"))
+                        .arg(Arg::new("v").short('v').multiple_occurrences(true).takes_value(false).required(false).help("Log verbosity (-v, -vv, -vvv...)"))
                         .get_matches();
 
   match app.occurrences_of("v") {
