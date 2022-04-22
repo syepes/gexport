@@ -18,7 +18,7 @@ COPY --from=vendor /app/vendor vendor
 COPY ./Cargo.toml .
 COPY ./Cargo.lock .
 COPY ./src src
-RUN rustup toolchain install nightly-x86_64-unknown-linux-gnu && rustup toolchain install nightly-armv7-unknown-linux-gnueabihf
+RUN rustup toolchain install nightly-x86_64-unknown-linux-gnu && rustup toolchain install nightly-armv7-unknown-linux-gnueabihf && rustup toolchain install nightly-aarch64-unknown-linux-gnu
 RUN cargo +nightly build --release
 
 FROM debian:bullseye-slim
