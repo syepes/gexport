@@ -77,6 +77,101 @@ impl<'a> ClientInfo<'a> {
     }
   }
 
+  pub fn add_org(&mut self, orgs: HashMap<String, String>) -> Result<(), anyhow::Error> {
+    trace!("add_org");
+
+    let name: Option<String>;
+    if let Ok(c) = reqwest::blocking::Client::builder().user_agent(env!("CARGO_PKG_NAME")).danger_accept_invalid_certs(true).timeout(Duration::from_secs(5)).connection_verbose(true).build() {
+      let req_url = format!("{ip}/api/users/lookup?loginOrEmail={usr}", ip = self.ip.unwrap(), usr = self.auth_usr.unwrap());
+      trace!("Auth on {:?} with {:?}/{:?}", req_url, self.auth_usr, self.auth_pwd);
+
+      let req = c.get(req_url).basic_auth(&self.auth_usr.unwrap(), Some(&self.auth_pwd.unwrap()));
+      match req.send() {
+        Ok(r) => {
+          trace!("resp:{:#?}", r);
+          match r.status() {
+            StatusCode::OK => {
+              match r.json::<serde_json::Value>() {
+                Ok(t) => {
+                  trace!("resp.json: {:#?}", t);
+                  name = t.get("name").map(|m| m.to_string().replace('"', ""));
+                  info!("User name = {}", name.clone().unwrap());
+                },
+                _ => return Err(anyhow!("Failed to parse json")),
+              }
+            },
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+              let msg: String = match r.json::<serde_json::Value>() {
+                Ok(Value::Object(m)) => m.get("message").map(|m| m.to_string().replace('"', "")).unwrap_or_else(|| "unknown".to_string()),
+                _ => "unknown".to_string(),
+              };
+              return Err(anyhow!("Auth failed: {}", msg));
+            },
+            _ => {
+              let msg: String = match r.json::<serde_json::Value>() {
+                Ok(Value::Object(m)) => m.get("message").map(|m| m.to_string().replace('"', "")).unwrap_or_else(|| "unknown".to_string()),
+                _ => "unknown".to_string(),
+              };
+              error!("Unknown request error: {}", msg);
+              return Err(anyhow!("Unknown request error: {}", msg));
+            },
+          }
+        },
+        Err(e) => {
+          error!("Request error: {:?}", e);
+          return Err(anyhow!("Request error: {:?}", e));
+        },
+      }
+    } else {
+      return Err(anyhow!("Cant build client"));
+    }
+
+    for (org_id, org_name) in orgs {
+      if let Ok(c) = reqwest::blocking::Client::builder().user_agent(env!("CARGO_PKG_NAME")).danger_accept_invalid_certs(true).timeout(Duration::from_secs(5)).connection_verbose(true).build() {
+        let req_url = format!("{ip}/api/orgs/{id}/users/", ip = self.ip.unwrap(), id = org_id);
+        trace!("Auth on {:?} with {:?}/{:?}", req_url, self.auth_usr, self.auth_pwd);
+
+        let name_local = name.as_ref().unwrap().clone();
+        let mut map = HashMap::new();
+        map.insert("role", "Admin");
+        map.insert("loginOrEmail", name_local.as_str());
+
+        let req = c.post(req_url).json(&map).basic_auth(&self.auth_usr.unwrap(), Some(&self.auth_pwd.unwrap()));
+        match req.send() {
+          Ok(r) => {
+            trace!("resp:{:#?}", r);
+            match r.status() {
+              StatusCode::OK | StatusCode::CONFLICT => {
+                match r.json::<serde_json::Value>() {
+                  Ok(t) => {
+                    trace!("resp.json: {:#?}", t);
+                    let msg = t.get("message").map(|m| m.to_string().replace('"', ""));
+                    info!("org: {} / msg: {}", org_name, msg.unwrap());
+                  },
+                  _ => return Err(anyhow!("Failed to parse json")),
+                }
+              },
+              _ => {
+                let msg: String = match r.json::<serde_json::Value>() {
+                  Ok(Value::Object(m)) => m.get("message").map(|m| m.to_string().replace('"', "")).unwrap_or_else(|| "unknown".to_string()),
+                  _ => "unknown".to_string(),
+                };
+                error!("Unknown request error: {} / org_id: {}", msg, org_id);
+              },
+            }
+          },
+          Err(e) => {
+            error!("Request error: {:?}", e);
+            return Err(anyhow!("Request error: {:?}", e));
+          },
+        }
+      } else {
+        return Err(anyhow!("Cant build client"));
+      }
+    }
+    Ok(())
+  }
+
   pub fn set_org(&mut self, id: String) -> Result<(), anyhow::Error> {
     trace!("set_org");
     if let Ok(c) = reqwest::blocking::Client::builder().user_agent(env!("CARGO_PKG_NAME")).danger_accept_invalid_certs(true).timeout(Duration::from_secs(5)).connection_verbose(true).build() {
@@ -186,12 +281,12 @@ impl<'a> ClientInfo<'a> {
                   let folder_title = t.get("meta").and_then(|m| m.get("folderTitle").map(|f| sanitize_names(f.to_string())));
                   let dashboard_title = t.get("dashboard").and_then(|m| m.get("title").map(|f| sanitize_names(f.to_string())));
 
-                  if folder_title.is_some() && dashboard_title.is_some() {
+                  if let Some(folder_title) = folder_title && let Some(dashboard_title) = dashboard_title {
                     let path = Path::new(&self.cfg_path.unwrap()).join(Path::new(&org_name));
 
-                    let folder = path.join("dashboards").join(folder_title.unwrap());
+                    let folder = path.join("dashboards").join(folder_title);
                     fs::create_dir_all(&folder).expect("Cannot create dir");
-                    let file = folder.join(dashboard_title.unwrap()).with_extension("json");
+                    let file = folder.join(dashboard_title).with_extension("json");
 
                     info!("Saving dashboard: {:?}", file);
                     let writer = BufWriter::new(File::create(file).expect("Cannot create file"));
@@ -288,12 +383,13 @@ impl<'a> ClientInfo<'a> {
                 Ok(t) => {
                   let ds_type = t.get("type").map(|i| sanitize_names(i.to_string()));
                   let ds_name = t.get("name").map(|i| sanitize_names(i.to_string()));
-                  if ds_type.is_some() && ds_name.is_some() {
+
+                  if let Some(ds_type) = ds_type && let Some(ds_name) = ds_name {
                     let path = Path::new(&self.cfg_path.unwrap()).join(Path::new(&org_name));
 
-                    let folder = path.join("datasources").join(ds_type.unwrap());
+                    let folder = path.join("datasources").join(ds_type);
                     fs::create_dir_all(&folder).expect("Cannot create dir");
-                    let file = folder.join(ds_name.unwrap()).with_extension("json");
+                    let file = folder.join(ds_name).with_extension("json");
 
                     info!("Saving datasource: {:?}", file);
                     let writer = BufWriter::new(File::create(file).expect("Cannot create file"));

@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 mod grafana;
 use std::io::Write;
 
@@ -15,7 +17,8 @@ fn main() -> Result<(), anyhow::Error> {
                         .arg(Arg::new("host").short('h').long("host").env("HOST").required(true).takes_value(true).help("http://host:port"))
                         .arg(Arg::new("auth_usr").short('u').long("auth_usr").env("AUTH_USR").required(true).takes_value(true))
                         .arg(Arg::new("auth_pwd").short('p').long("auth_pwd").env("AUTH_PWD").requires("auth_usr").required(true).takes_value(true))
-                        .arg(Arg::new("export_path").short('e').long("export_path").env("EXPORT_PATH").required(false).takes_value(true).default_value("export").help("Export path"))
+                        .arg(Arg::new("export_path").short('e').long("export_path").env("EXPORT_PATH").required(false).takes_value(true).default_value("export").help("Export filesystem path"))
+                        .arg(Arg::new("org_grant").short('o').long("org_grant").env("ORG_GRANT").required(false).takes_value(false).help("Grant auth user to all orgs"))
                         .arg(Arg::new("v").short('v').multiple_occurrences(true).takes_value(false).required(false).help("Log verbosity (-v, -vv, -vvv...)"))
                         .get_matches();
 
@@ -24,7 +27,8 @@ fn main() -> Result<(), anyhow::Error> {
     1 => std::env::set_var("RUST_LOG", "warn"),
     2 => std::env::set_var("RUST_LOG", "info"),
     3 => std::env::set_var("RUST_LOG", "debug"),
-    4 | _ => std::env::set_var("RUST_LOG", "trace"),
+    4 => std::env::set_var("RUST_LOG", "trace"),
+    _ => std::env::set_var("RUST_LOG", "trace"),
   }
   env_logger::Builder::from_default_env().format(|buf, record| {
                                            writeln!(buf,
@@ -42,6 +46,10 @@ fn main() -> Result<(), anyhow::Error> {
 
   match gra.get_orgs() {
     Ok(orgs) => {
+      if app.is_present("org_grant") {
+        _ = gra.add_org(orgs.clone());
+      }
+
       for (org_id, org_name) in orgs {
         if gra.set_org(org_id.clone()).is_ok() {
           if let Ok(ds) = gra.search_datasources() {

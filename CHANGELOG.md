@@ -6,6 +6,10 @@ This CHANGELOG follows the format listed at [Keep A Changelog](http://keepachang
 
 ## [Unreleased]
 
+## 0.1.4 - 2022-04-22
+
+- Organization Auto Granting (Feature)
+
 ## 0.1.3 - 2022-04-21
 
 - Fix parameter paring
